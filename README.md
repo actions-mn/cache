@@ -2,4 +2,11 @@
 
 # cache
 
-Cache metanorma-related assets to speedup next runs
+Cache metanorma-related assets to speedup next runs.
+
+Currently this action caches:
+
+- `~/.metanorma`
+- `~/.fontist`
+- `~/.relaton`
+- `~/.metanorma-ietf-workgroup-cache.json`

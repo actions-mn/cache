@@ -20,7 +20,7 @@ jobs:
           sudo apt-get install yamllint
           yamllint action.yml
   test:
-    name: Test ./site-gen/ action on ${{ matrix.os }}
+    name: Test cache action on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
