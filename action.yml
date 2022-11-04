@@ -1,0 +1,30 @@
+name: metanorma-cache
+description: Cache metanorma-related assets (fonts, workgroups)
+inputs:
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/cache@v3
+      with:
+        path: ~/.metanorma
+        key: metanorma-home
+        restore-keys: metanorma-home
+
+    - uses: actions/cache@v3
+      with:
+        path: ~/.relaton
+        key: metanorma-relaton
+        restore-keys: metanorma-relaton
+
+    - uses: actions/cache@v3
+      with:
+        path: ~/.fontist
+        key: metanorma-fontist
+        restore-keys: metanorma-fontist
+
+    - uses: actions/cache@v3
+      with:
+        path: ~/.metanorma-ietf-workgroup-cache.json
+        key: metanorma-ietf-workgroup-cache
+        restore-keys: metanorma-ietf-workgroup-cache
