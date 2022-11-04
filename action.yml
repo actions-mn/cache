@@ -1,6 +1,5 @@
 name: metanorma-cache
 description: Cache metanorma-related assets (fonts, workgroups)
-inputs:
 
 runs:
   using: "composite"
