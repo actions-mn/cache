@@ -38,7 +38,7 @@ jobs:
 
     - uses: ./
 
-    - uses: actions-mn/cli/site-gen@main
+    - uses: actions-mn/site-gen@main
       with:
         source-path: iso
         config-file: metanorma.yml
