@@ -34,7 +34,7 @@ jobs:
         repository: metanorma/mn-samples-iso
         path: iso
 
-    - uses: actions-mn/setup@master
+    - uses: actions-mn/setup@main
 
     - uses: ./
 
