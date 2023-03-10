@@ -6,27 +6,28 @@ runs:
   steps:
     - uses: actions/cache@v3
       with:
-        path: ~/.metanorma
+        path: |
+          ~/.metanorma
+          /root/.metanorma
         key: metanorma-home
         restore-keys: metanorma-home
 
     - uses: actions/cache@v3
       with:
-        path: ~/.relaton
+        path: |
+          ~/.relaton
+          /root/.relaton
         key: metanorma-relaton
         restore-keys: metanorma-relaton
 
     - uses: actions/cache@v3
       with:
-        path: ~/.fontist
+        path: |
+          ~/.fontist
+          /config/fonts
+          /root/.fontist
         key: metanorma-fontist
         restore-keys: metanorma-fontist
-
-    - uses: actions/cache@v3
-      with:
-        path: /config/fonts
-        key: fontist-docker
-        restore-keys: docker-fontist
 
     - uses: actions/cache@v3
       with:
