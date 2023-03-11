@@ -44,6 +44,6 @@ jobs:
         config-file: metanorma.yml
         agree-to-terms: true
 
-    - uses: andstor/file-existence-action@v1
+    - uses: andstor/file-existence-action@v2
       with:
         files: iso/site/index.html
