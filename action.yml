@@ -4,7 +4,7 @@ description: Cache metanorma-related assets (fonts, workgroups)
 runs:
   using: "composite"
   steps:
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.metanorma
@@ -12,7 +12,7 @@ runs:
         key: metanorma-home
         restore-keys: metanorma-home
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.relaton
@@ -20,7 +20,7 @@ runs:
         key: metanorma-relaton
         restore-keys: metanorma-relaton
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.fontist
@@ -29,7 +29,7 @@ runs:
         key: metanorma-fontist
         restore-keys: metanorma-fontist
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.metanorma-ietf-workgroup-cache.json
         key: metanorma-ietf-workgroup-cache
