@@ -26,25 +26,32 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
+        samples: [ metanorma/mn-samples-cc ]
+        with:
+        - cache-site-for-manifest: ''
+        - cache-site-for-manifest: test/metanorma/mn-samples-cc/metanorma.yml
     steps:
     - uses: actions/checkout@v4
 
     - uses: actions/checkout@v4
       with:
-        repository: metanorma/mn-samples-cc
-        path: cc
+        repository: ${{ matrix.samples }}
+        path: test/${{ matrix.samples }}
 
     - uses: actions-mn/setup@main
 
     - uses: ./
+      with:
+        cache-site-for-manifest: ${{ matrix.with.cache-site-for-manifest }}
 
     - uses: actions-mn/site-gen@main
       with:
-        source-path: cc
+        source-path: test/${{ matrix.samples }}
         config-file: metanorma.yml
         agree-to-terms: true
+        output-dir: site
 
     - uses: andstor/file-existence-action@v2
       with:
-        files: cc/site/index.html
+        files: test/${{ matrix.samples }}/site/index.html
 
