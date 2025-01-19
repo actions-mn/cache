@@ -1,5 +1,16 @@
 name: metanorma-cache
 description: Cache metanorma-related assets (fonts, workgroups)
+inputs:
+  cache-site-for-manifest:
+    description: Path to valid metanorma.yml manifest file
+    default: ''
+  cache-site-path:
+    description: Path to the output site directory
+    default: '_site'
+outputs:
+  cache-site-cache-hit:
+    description: "True if valid cache exists"
+    value: ${{ steps.site-cache.outputs.cache-hit }}
 
 runs:
   using: "composite"
@@ -36,3 +47,33 @@ runs:
           /root/.metanorma-ietf-workgroup-cache.json
         key: metanorma-ietf-workgroup-cache
         restore-keys: metanorma-ietf-workgroup-cache
+
+    - if: ${{ inputs.cache-site-for-manifest != '' }}
+      id: build-input-hash
+      uses: actions/github-script@v7
+      env:
+        METANORMA_MANIFEST: ${{ inputs.cache-site-for-manifest }}
+      with:
+        script: |
+          const fs = require('fs');
+          const yaml = require('yaml');
+          const path = require('path');
+
+          const manifestPath = process.env.METANORMA_MANIFEST;
+          const manifestContent = yaml.parse(fs.readFileSync(manifestPath, 'utf8'));
+          const documentPaths = manifestContent.metanorma.source.files || [];
+          const globDirs = [...new Set(documentPaths.map(documentPath => path.dirname(documentPath)).map(documentPath => path.join(documentPath, '**')))];
+
+          console.log('Base directories:', baseDirs);
+          console.log('Input hash:', hashFiles(...globDirs));
+
+          core.setOutput('input-dirs', globDirs);
+          core.setOutput('input-hash', hashFiles(...globDirs));
+
+    - if: ${{ inputs.cache-site-for-manifest != '' }}
+      id: site-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.cache-site-path }}
+        key: metanorma-site-cache-${{ steps.build-input-hash.outputs.cache-hit }}
+        restore-keys: metanorma-site-cache-${{ steps.build-input-hash.outputs.cache-hit }}
