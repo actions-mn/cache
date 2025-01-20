@@ -45,7 +45,7 @@ runs:
       run: npm install yaml @actions/glob
 
     - if: ${{ inputs.cache-site-for-manifest != '' }}
-      id: input-hash
+      id: build-hash
       uses: actions/github-script@v7
       env:
         METANORMA_MANIFEST: ${{ inputs.cache-site-for-manifest }}
@@ -80,11 +80,11 @@ runs:
 
           const inputHash = await hashFiles(hashPatterns);
           console.log('Input hash:', inputHash);
-          core.setOutput('input-hash', inputHash);
+          core.setOutput('hash', inputHash);
 
     - if: ${{ inputs.cache-site-for-manifest != '' }}
       id: site-cache
       uses: actions/cache@v4
       with:
         path: ${{ inputs.cache-site-path }}
-        key: metanorma-site-cache-${{ steps.input-hash.outputs.cache-hit }}
+        key: metanorma-site-cache-${{ steps.build-hash.outputs.hash }}
