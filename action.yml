@@ -1,5 +1,21 @@
 name: metanorma-cache
 description: Cache metanorma-related assets (fonts, workgroups)
+inputs:
+  cache-site-for-manifest:
+    description: Path to valid metanorma.yml manifest file
+    default: ''
+  extra-input:
+    description: |
+      Coma (or line) seprated list of directories that effect metanorma build.
+      All pathes relative to `cache-site-for-manifest`
+    default: ''
+  cache-site-path:
+    description: Path to the output site directory
+    default: '_site'
+outputs:
+  cache-site-cache-hit:
+    description: "True if valid cache exists"
+    value: ${{ steps.site-cache.outputs.cache-hit }}
 
 runs:
   using: "composite"
@@ -36,3 +52,52 @@ runs:
           /root/.metanorma-ietf-workgroup-cache.json
         key: metanorma-ietf-workgroup-cache
         restore-keys: metanorma-ietf-workgroup-cache
+
+    - if: ${{ inputs.cache-site-for-manifest != '' }}
+      shell: bash
+      run: npm install yaml @actions/glob
+
+    - if: ${{ inputs.cache-site-for-manifest != '' }}
+      id: input-hash
+      uses: actions/github-script@v7
+      env:
+        METANORMA_MANIFEST: ${{ inputs.cache-site-for-manifest }}
+        METANORMA_EXTRA_INPUT: ${{ inputs.extra-input }}
+      with:
+        script: |
+          const fs = require('fs');
+          const yaml = require('yaml');
+          const path = require('path');
+          const { hashFiles } = require('@actions/glob');
+
+          const manifestPath = process.env.METANORMA_MANIFEST;
+          const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+          const manifest = yaml.parse(manifestContent);
+          const documentPaths = manifest.metanorma.source.files || [];
+          const basePath = path.dirname(manifestPath);
+
+          const matchPatterns = new Set(
+            documentPaths
+              .map(documentPath => path.dirname(documentPath))
+              .map(documentPath => path.join(basePath, documentPath, '**'))
+          );
+
+          if (process.env.METANORMA_EXTRA_INPUT) {
+            process.env.METANORMA_EXTRA_INPUT.split(/[\n,]/)
+              .forEach(input => matchPatterns.add(path.join(basePath, input)));
+          }
+
+          matchPatterns.delete('**');
+          const hashPatterns = [...matchPatterns].join('\n');
+          console.log('Input directories:', hashPatterns);
+
+          const inputHash = await hashFiles(hashPatterns);
+          console.log('Input hash:', inputHash);
+          core.setOutput('input-hash', inputHash);
+
+    - if: ${{ inputs.cache-site-for-manifest != '' }}
+      id: site-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.cache-site-path }}
+        key: metanorma-site-cache-${{ steps.input-hash.outputs.cache-hit }}
