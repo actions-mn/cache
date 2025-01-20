@@ -25,33 +25,15 @@ runs:
         path: |
           ~/.metanorma
           /root/.metanorma
-        key: metanorma-home
-        restore-keys: metanorma-home
-
-    - uses: actions/cache@v4
-      with:
-        path: |
           ~/.relaton
           /root/.relaton
-        key: metanorma-relaton
-        restore-keys: metanorma-relaton
-
-    - uses: actions/cache@v4
-      with:
-        path: |
           ~/.fontist
           /config/fonts
           /root/.fontist
-        key: metanorma-fontist
-        restore-keys: metanorma-fontist
-
-    - uses: actions/cache@v4
-      with:
-        path: |
           ~/.metanorma-ietf-workgroup-cache.json
           /root/.metanorma-ietf-workgroup-cache.json
-        key: metanorma-ietf-workgroup-cache
-        restore-keys: metanorma-ietf-workgroup-cache
+        key: metanorma-cache
+        restore-keys: metanorma-cache
 
     - if: ${{ inputs.cache-site-for-manifest != '' }}
       shell: bash
