@@ -36,6 +36,11 @@ runs:
         restore-keys: metanorma-cache
 
     - if: ${{ inputs.cache-site-for-manifest != '' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+
+    - if: ${{ inputs.cache-site-for-manifest != '' }}
       shell: bash
       run: npm install yaml @actions/glob
 
