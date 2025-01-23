@@ -75,6 +75,7 @@ runs:
           }
 
           matchPatterns.delete('**');
+          matchPatterns.delete('.');
           const hashPatterns = [...matchPatterns].join('\n');
           console.log('Input directories:', hashPatterns);
 
