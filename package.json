@@ -1,0 +1,44 @@
+{
+  "name": "metanorma-cache",
+  "version": "2.0.0",
+  "description": "Cache metanorma-related assets (fonts, workgroups)",
+  "main": "lib/main.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "tsc && ncc build",
+    "format": "prettier --write '**/*.ts'",
+    "format-check": "prettier --check '**/*.ts'",
+    "lint": "eslint src/**/*.ts",
+    "test": "jest"
+  },
+  "keywords": [
+    "github",
+    "actions",
+    "cache",
+    "metanorma"
+  ],
+  "author": "Ribose Inc.",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/cache": "^3.2.4",
+    "@actions/core": "^1.11.1",
+    "glob": "^11.0.0",
+    "yaml": "^2.8.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.5",
+    "@typescript-eslint/eslint-plugin": "^8.19.1",
+    "@typescript-eslint/parser": "^8.19.1",
+    "@vercel/ncc": "^0.38.4",
+    "eslint": "^8.57.1",
+    "eslint-plugin-github": "^5.1.2",
+    "eslint-plugin-jest": "^28.10.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.4.2",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.8.2"
+  }
+}

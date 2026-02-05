@@ -5,23 +5,48 @@ on:
     branches: [ main ]
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref_name }}'
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
+  build:
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20.x
+
+      - run: npm ci
+
+      - run: npm run format-check
+
+      - run: npm run lint
+
+      - run: npm test
+
+      - run: npm run build
+
+  lint:
+    name: Lint Action YAML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
 
       - run: |
           sudo apt-get install yamllint
           yamllint action.yml
+
   test:
     name: Test cache action on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    needs: build
     strategy:
       fail-fast: false
       matrix:
@@ -31,9 +56,9 @@ jobs:
         - cache-site-for-manifest: ''
         - cache-site-for-manifest: test/metanorma/mn-samples-cc/metanorma.yml
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         repository: ${{ matrix.samples }}
         path: test/${{ matrix.samples }}
@@ -54,4 +79,3 @@ jobs:
     - uses: andstor/file-existence-action@v2
       with:
         files: test/${{ matrix.samples }}/site/index.html
-
