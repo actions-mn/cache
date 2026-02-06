@@ -5,8 +5,8 @@
 import * as core from '@actions/core';
 import * as fs from 'fs';
 import * as path from 'path';
-import type { ICacheSettings } from './cache-settings';
-import { ValidationError } from './errors';
+import type { ICacheSettings } from './cache-settings.js';
+import { ValidationError } from './errors.js';
 
 /**
  * Get and validate all inputs from the action

@@ -2,35 +2,33 @@
  * Tests for input-helper
  */
 
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getInputs } from '../src/input-helper';
 import * as core from '@actions/core';
+import * as fs from 'fs';
 
 // Mock fs module
-jest.mock('fs', () => {
-  const actualFs = jest.requireActual('fs');
+vi.mock('fs', async () => {
+  const actualFs = await vi.importActual('fs');
   return {
     ...actualFs,
-    existsSync: jest.fn(),
-    statSync: jest.fn(),
+    existsSync: vi.fn(),
+    statSync: vi.fn(),
   };
 });
 
-import * as fs from 'fs';
-
-const mockExistsSync = fs.existsSync as jest.MockedFunction<
-  typeof fs.existsSync
->;
-const mockStatSync = fs.statSync as jest.MockedFunction<typeof fs.statSync>;
+const mockExistsSync = vi.mocked(fs).existsSync;
+const mockStatSync = vi.mocked(fs).statSync;
 
 describe('input-helper', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('getInputs', () => {
     it('should return default values when no inputs are provided', async () => {
-      jest.spyOn(core, 'getInput').mockImplementation((name) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name) => {
         if (name === 'cache-site-for-manifest') return '';
         if (name === 'extra-input') return '';
         if (name === 'cache-site-path') return '';
@@ -47,7 +45,7 @@ describe('input-helper', () => {
     });
 
     it('should return custom values when inputs are provided and file exists', async () => {
-      jest.spyOn(core, 'getInput').mockImplementation((name) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name) => {
         if (name === 'cache-site-for-manifest') return 'metanorma.yml';
         if (name === 'extra-input') return 'assets,templates';
         if (name === 'cache-site-path') return 'site';
@@ -67,7 +65,7 @@ describe('input-helper', () => {
     });
 
     it('should throw ValidationError when manifest file does not exist', async () => {
-      jest.spyOn(core, 'getInput').mockImplementation((name) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name) => {
         if (name === 'cache-site-for-manifest') return 'metanorma.yml';
         if (name === 'extra-input') return '';
         if (name === 'cache-site-path') return '_site';
@@ -82,7 +80,7 @@ describe('input-helper', () => {
     });
 
     it('should throw ValidationError when manifest path starts with ~', async () => {
-      jest.spyOn(core, 'getInput').mockImplementation((name) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name) => {
         if (name === 'cache-site-for-manifest') return '~/metanorma.yml';
         if (name === 'extra-input') return '';
         if (name === 'cache-site-path') return '_site';
@@ -93,7 +91,7 @@ describe('input-helper', () => {
     });
 
     it('should throw ValidationError when manifest is a directory', async () => {
-      jest.spyOn(core, 'getInput').mockImplementation((name) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name) => {
         if (name === 'cache-site-for-manifest') return 'metanorma.yml';
         if (name === 'extra-input') return '';
         if (name === 'cache-site-path') return '_site';
@@ -107,7 +105,7 @@ describe('input-helper', () => {
     });
 
     it('should throw ValidationError when manifest has invalid extension', async () => {
-      jest.spyOn(core, 'getInput').mockImplementation((name) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name) => {
         if (name === 'cache-site-for-manifest') return 'metanorma.txt';
         if (name === 'extra-input') return '';
         if (name === 'cache-site-path') return '_site';
@@ -123,7 +121,7 @@ describe('input-helper', () => {
     });
 
     it('should throw ValidationError when cache-site-path starts with ~', async () => {
-      jest.spyOn(core, 'getInput').mockImplementation((name) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name) => {
         if (name === 'cache-site-for-manifest') return '';
         if (name === 'extra-input') return '';
         if (name === 'cache-site-path') return '~/site';
@@ -134,7 +132,7 @@ describe('input-helper', () => {
     });
 
     it('should throw ValidationError when cache-site-path contains ..', async () => {
-      jest.spyOn(core, 'getInput').mockImplementation((name) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name) => {
         if (name === 'cache-site-for-manifest') return '';
         if (name === 'extra-input') return '';
         if (name === 'cache-site-path') return '../site';
@@ -147,7 +145,7 @@ describe('input-helper', () => {
     });
 
     it('should trim whitespace from inputs', async () => {
-      jest.spyOn(core, 'getInput').mockImplementation((name) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name) => {
         if (name === 'cache-site-for-manifest') return '  metanorma.yml  ';
         if (name === 'extra-input') return '  assets , templates  ';
         if (name === 'cache-site-path') return '  site  ';
@@ -167,7 +165,7 @@ describe('input-helper', () => {
     });
 
     it('should use default _site when cache-site-path is empty', async () => {
-      jest.spyOn(core, 'getInput').mockImplementation((name) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name) => {
         if (name === 'cache-site-for-manifest') return '';
         if (name === 'extra-input') return '';
         if (name === 'cache-site-path') return '   ';

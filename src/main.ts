@@ -3,10 +3,10 @@
  */
 
 import * as core from '@actions/core';
-import * as inputHelper from './input-helper';
-import * as systemCacheManager from './system-cache-manager';
-import * as siteCacheManager from './site-cache-manager';
-import { ValidationError } from './errors';
+import * as inputHelper from './input-helper.js';
+import * as systemCacheManager from './system-cache-manager.js';
+import * as siteCacheManager from './site-cache-manager.js';
+import { ValidationError } from './errors.js';
 
 /**
  * Main function
@@ -28,7 +28,7 @@ async function run(): Promise<void> {
     if (error instanceof ValidationError) {
       core.setFailed(`Input validation failed: ${error.message}`);
     } else {
-      core.setFailed(`${(error as any)?.message ?? error}`);
+      core.setFailed(`${(error as Error)?.message ?? error}`);
     }
   }
 }

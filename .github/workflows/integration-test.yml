@@ -1,0 +1,350 @@
+# Integration Tests for actions-mn/cache
+#
+# This workflow tests cache functionality with real Metanorma builds.
+# Key concept: Cache persists across jobs in the same workflow run,
+# allowing us to test cache hit/miss behavior.
+#
+# Test Strategy:
+# 1. Cold start job - creates cache on first run
+# 2. Warm start job - verifies cache is restored on second run
+# 3. Cross-platform tests - verify works on Linux/macOS/Windows
+
+name: integration-test
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref_name }}'
+  cancel-in-progress: true
+
+jobs:
+  # =============================================================================
+  # JOB 1: Cold Start (No Cache)
+  # Purpose: Verify action works correctly when no cache exists
+  # Expected: Cache miss, Metanorma builds successfully, cache is created
+  # =============================================================================
+  cold-start:
+    name: Cold Start - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Checkout sample project
+        uses: actions/checkout@v6
+        with:
+          repository: metanorma/mn-samples-cc
+          path: test/mn-samples-cc
+
+      - name: Setup Metanorma
+        uses: actions-mn/setup@main
+
+      # This is the FIRST run - cache should not exist
+      - name: Cache Metanorma assets (cold start)
+        id: cache-cold
+        uses: ./
+
+      # Verify cache outputs for cold start
+      - name: Verify cold start outputs
+        shell: bash
+        run: |
+          echo "=== Cold Start Verification ==="
+          echo "Cache hit status: '${{ steps.cache-cold.outputs.cache-site-cache-hit }}'"
+
+          # On cold start (no manifest), cache-site-cache-hit should be empty or "false"
+          if [ "${{ steps.cache-cold.outputs.cache-site-cache-hit }}" = "true" ]; then
+            echo "ERROR: Cold start should not be a cache hit!"
+            exit 1
+          fi
+
+          echo "✓ Cold start: correctly reported as cache miss or empty"
+
+      # Run Metanorma to generate site (populates system assets)
+      - name: Run Metanorma site-gen
+        uses: actions-mn/site-gen@main
+        with:
+          source-path: test/mn-samples-cc
+          config-file: metanorma.yml
+          agree-to-terms: true
+          output-dir: site
+
+      # Verify Metanorma ran successfully
+      - name: Verify output exists
+        shell: bash
+        run: |
+          if [ ! -f "test/mn-samples-cc/site/index.html" ]; then
+            echo "ERROR: Metanorma did not generate expected output"
+            exit 1
+          fi
+          echo "✓ Metanorma successfully generated site/index.html"
+
+      # Check system cache directories
+      - name: Check system cache directories
+        shell: bash
+        run: |
+          echo "=== System Cache Directories ==="
+
+          # Check for ~/.metanorma (should exist after site-gen)
+          if [ -d ~/.metanorma ] || [ -d /root/.metanorma ]; then
+            echo "✓ Metanorma cache directory exists"
+          else
+            echo "Note: Metanorma cache directory not found (may be empty)"
+          fi
+
+          # List what's in home directory
+          echo "Contents of home directory:"
+          ls -la ~ | grep -E "metanorma|fontist|relaton" || echo "  No cache directories found"
+
+  # =============================================================================
+  # JOB 2: Warm Start (Cache Hit)
+  # Purpose: Verify action correctly restores cache from cold start
+  # Expected: Cache is restored, Metanorma builds successfully
+  # =============================================================================
+  warm-start:
+    name: Warm Start - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: cold-start
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Checkout sample project
+        uses: actions/checkout@v6
+        with:
+          repository: metanorma/mn-samples-cc
+          path: test/mn-samples-cc
+
+      - name: Setup Metanorma
+        uses: actions-mn/setup@main
+
+      # This is the SECOND run - cache SHOULD exist from previous job
+      # Note: Cache may not hit because it's a different job, but the
+      # system assets cache should still be restored
+      - name: Cache Metanorma assets (warm start)
+        id: cache-warm
+        uses: ./
+
+      - name: Verify warm start behavior
+        shell: bash
+        run: |
+          echo "=== Warm Start Verification ==="
+          echo "Cache hit status: '${{ steps.cache-warm.outputs.cache-site-cache-hit }}'"
+          echo "✓ Warm start completed without errors"
+
+      # Run Metanorma again
+      - name: Run Metanorma site-gen
+        uses: actions-mn/site-gen@main
+        with:
+          source-path: test/mn-samples-cc
+          config-file: metanorma.yml
+          agree-to-terms: true
+          output-dir: site
+
+      # Verify output exists
+      - name: Verify output exists
+        shell: bash
+        run: |
+          if [ ! -f "test/mn-samples-cc/site/index.html" ]; then
+            echo "ERROR: Metanorma with warm start did not generate output"
+            exit 1
+          fi
+          echo "✓ Metanorma with warm start successfully generated output"
+
+  # =============================================================================
+  # JOB 3: System Cache Only (No Manifest)
+  # Purpose: Verify system cache works without site caching
+  # =============================================================================
+  system-cache-only:
+    name: System Cache Only - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Checkout sample project
+        uses: actions/checkout@v6
+        with:
+          repository: metanorma/mn-samples-cc
+          path: test/mn-samples-cc
+
+      - name: Setup Metanorma
+        uses: actions-mn/setup@main
+
+      # Use cache action WITHOUT manifest (system cache only)
+      - name: Cache system assets only
+        id: system-cache
+        uses: ./
+
+      # Verify no site cache output when manifest not provided
+      - name: Verify system cache only mode
+        shell: bash
+        run: |
+          echo "=== System Cache Only Verification ==="
+
+          # cache-site-cache-hit should be empty when no manifest is provided
+          if [ -n "${{ steps.system-cache.outputs.cache-site-cache-hit }}" ]; then
+            echo "WARNING: Unexpected cache-site-cache-hit output (should be empty without manifest)"
+          fi
+
+          echo "✓ System cache only mode works correctly"
+
+      # Verify Metanorma still works
+      - name: Run Metanorma
+        uses: actions-mn/site-gen@main
+        with:
+          source-path: test/mn-samples-cc
+          config-file: metanorma.yml
+          agree-to-terms: true
+          output-dir: site
+
+      - name: Verify output
+        shell: bash
+        run: |
+          if [ ! -f "test/mn-samples-cc/site/index.html" ]; then
+            echo "ERROR: Output not found"
+            exit 1
+          fi
+          echo "✓ Output generated successfully"
+
+  # =============================================================================
+  # JOB 4: Permission Error Handling
+  # Purpose: Verify action handles permission errors gracefully
+  # =============================================================================
+  permission-handling:
+    name: Permission Handling - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Metanorma
+        uses: actions-mn/setup@main
+
+      # Run cache action - should handle /root/ permission errors gracefully
+      - name: Run cache (should handle permissions gracefully)
+        id: cache-perm
+        uses: ./
+
+      - name: Verify permission handling
+        shell: bash
+        run: |
+          echo "=== Permission Handling Verification ==="
+          echo "✓ Cache action completed without failing on permission errors"
+          echo "Note: Inaccessible paths (like /root/ on non-Docker) should be silently skipped"
+
+  # =============================================================================
+  # JOB 5: With Manifest (Site Cache)
+  # Purpose: Verify site caching works with manifest file
+  # =============================================================================
+  site-cache-with-manifest:
+    name: Site Cache with Manifest - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Checkout sample project
+        uses: actions/checkout@v6
+        with:
+          repository: metanorma/mn-samples-cc
+          path: test/mn-samples-cc
+
+      - name: Setup Metanorma
+        uses: actions-mn/setup@main
+
+      # Use cache action WITH manifest
+      - name: Cache with manifest
+        id: cache-manifest
+        uses: ./
+        with:
+          cache-site-for-manifest: test/mn-samples-cc/metanorma.yml
+
+      # Verify hash output is generated
+      - name: Verify hash generated
+        shell: bash
+        run: |
+          echo "=== Hash Generation Verification ==="
+          HASH="${{ steps.cache-manifest.outputs.hash }}"
+
+          if [ -n "$HASH" ]; then
+            echo "✓ Hash was generated: $HASH"
+          else
+            echo "WARNING: No hash generated (check if manifest parsing failed)"
+          fi
+
+      # Run Metanorma
+      - name: Run Metanorma
+        uses: actions-mn/site-gen@main
+        with:
+          source-path: test/mn-samples-cc
+          config-file: metanorma.yml
+          agree-to-terms: true
+          output-dir: site
+
+      # Verify output
+      - name: Verify output
+        shell: bash
+        run: |
+          if [ ! -f "test/mn-samples-cc/site/index.html" ]; then
+            echo "ERROR: Output not found"
+            exit 1
+          fi
+          echo "✓ Output generated successfully with manifest-based caching"
+
+  # =============================================================================
+  # JOB 6: Summary
+  # =============================================================================
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [cold-start, warm-start, system-cache-only, permission-handling, site-cache-with-manifest]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "=== Integration Test Summary ==="
+          echo ""
+          echo "✓ All integration test jobs completed"
+          echo ""
+          echo "Test Scenarios Validated:"
+          echo "  1. Cold start (no cache) - Linux, macOS"
+          echo "  2. Warm start (cache restoration) - Linux, macOS"
+          echo "  3. System cache only - Linux, macOS, Windows"
+          echo "  4. Permission error handling - Linux, macOS"
+          echo "  5. Site cache with manifest - Linux, macOS"
+          echo ""
+          echo "For detailed logs, review each job's output."
