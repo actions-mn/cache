@@ -2,34 +2,33 @@
  * Tests for file-hash-generator
  */
 
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { generateHashPatterns, generateHash } from '../src/file-hash-generator';
 import { ValidationError } from '../src/errors';
 import type { IMetanormaManifest } from '../src/manifest-parser';
 
 // Mock fs module
-jest.mock('fs', () => {
-  const actualFs = jest.requireActual('fs');
+vi.mock('fs', async () => {
+  const actualFs = await vi.importActual('fs');
   return {
     ...actualFs,
-    readFileSync: jest.fn(),
-    existsSync: jest.fn(),
-    mkdirSync: jest.fn(),
-    writeFileSync: jest.fn(),
+    readFileSync: vi.fn(),
+    existsSync: vi.fn(),
+    mkdirSync: vi.fn(),
+    writeFileSync: vi.fn(),
   };
 });
 
 // Mock glob module
-jest.mock('glob', () => ({
-  glob: jest.fn(),
+vi.mock('glob', () => ({
+  glob: vi.fn(),
 }));
 
 import * as fs from 'fs';
 import { glob } from 'glob';
 
-const mockReadFileSync = fs.readFileSync as jest.MockedFunction<
-  typeof fs.readFileSync
->;
-const mockGlob = glob as jest.MockedFunction<typeof glob>;
+const mockReadFileSync = vi.mocked(fs.readFileSync);
+const mockGlob = vi.mocked(glob);
 
 describe('file-hash-generator', () => {
   describe('generateHashPatterns', () => {
@@ -202,7 +201,7 @@ describe('file-hash-generator', () => {
 
   describe('generateHash', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should return undefined for empty patterns', async () => {

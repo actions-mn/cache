@@ -7,8 +7,8 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { glob } from 'glob';
-import type { IMetanormaManifest } from './manifest-parser';
-import { ValidationError } from './errors';
+import type { IMetanormaManifest } from './manifest-parser.js';
+import { ValidationError } from './errors.js';
 
 /**
  * Generate cache hash patterns from manifest and extra input

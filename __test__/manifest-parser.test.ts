@@ -2,6 +2,7 @@
  * Tests for manifest-parser
  */
 
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   parseManifest,
   getSourceFiles,
@@ -10,23 +11,21 @@ import {
 import type { IMetanormaManifest } from '../src/manifest-parser';
 
 // Mock fs module
-jest.mock('fs', () => ({
-  readFileSync: jest.fn(),
-  existsSync: jest.fn(),
-  mkdirSync: jest.fn(),
-  writeFileSync: jest.fn(),
+vi.mock('fs', () => ({
+  readFileSync: vi.fn(),
+  existsSync: vi.fn(),
+  mkdirSync: vi.fn(),
+  writeFileSync: vi.fn(),
 }));
 
 import * as fs from 'fs';
 
-const mockReadFileSync = fs.readFileSync as jest.MockedFunction<
-  typeof fs.readFileSync
->;
+const mockReadFileSync = vi.mocked(fs.readFileSync);
 
 describe('manifest-parser', () => {
   describe('parseManifest', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should parse a valid manifest file', () => {

@@ -4,14 +4,14 @@
 
 import * as cache from '@actions/cache';
 import * as core from '@actions/core';
-import { CacheConstants, Outputs } from './constants';
-import type { ICacheSettings } from './cache-settings';
+import { CacheConstants, Outputs } from './constants.js';
+import type { ICacheSettings } from './cache-settings.js';
 import {
   parseManifest,
   getSourceFiles,
   getManifestDir,
-} from './manifest-parser';
-import { generateHashPatterns, generateHash } from './file-hash-generator';
+} from './manifest-parser.js';
+import { generateHashPatterns, generateHash } from './file-hash-generator.js';
 
 /**
  * Cache site output directory
