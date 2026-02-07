@@ -11,6 +11,7 @@ Cache metanorma-related assets to speed up CI builds.
 - **Site Output Caching** - Conditionally caches generated site output based on source files
 - **Cross-Platform** - Works on Linux, macOS, and Windows runners
 - **Type-Safe** - Written in TypeScript with full type definitions
+- **Modern Stack** - Built with Node 24, ES2024, and Vitest
 
 ## Usage
 
@@ -257,9 +258,9 @@ This repository includes comprehensive tests:
 
 | Test Type | Description | Location |
 |-----------|-------------|----------|
-| Unit Tests | Jest tests for action logic (mocked cache) | `__test__/*.test.ts` |
-| Integration Tests | Real Metanorma builds on multiple OSes | `.github/workflows/test.yml` |
-| Environment Tests | Docker vs Ubuntu runner scenarios | `.github/workflows/environments.yml` |
+| Unit Tests | Vitest tests for action logic (mocked cache) | `__test__/*.test.ts` |
+| Integration Tests | Real Metanorma builds on multiple OSes | `.github/workflows/integration-test.yml` |
+| Environment Tests | Docker vs Ubuntu runner scenarios | `.github/workflows/test.yml` |
 
 ### Running Tests Locally
 

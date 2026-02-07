@@ -20,7 +20,7 @@ This project adheres to a code of conduct. By participating, you are expected to
 
 ### Prerequisites
 
-- **Node.js 20.x** - This action uses the node20 runtime
+- **Node.js 24.x** - This action uses Node 24 with ES2024 support
 - **npm 10.x** or later - For package management
 
 ### Setup
@@ -84,7 +84,7 @@ This project adheres to a code of conduct. By participating, you are expected to
 
 ### Unit Tests
 
-Unit tests are written using Jest and located in `__test__/`:
+Unit tests are written using Vitest and located in `__test__/`:
 
 ```bash
 # Run all tests
@@ -153,11 +153,14 @@ rm -rf "$TEST_DIR"
 
 ### TypeScript
 
-- Use **TypeScript 5.8+** with strict mode enabled
+- Use **TypeScript 5.9+** with strict mode enabled
+- Target: **ES2024**
+- Module: **NodeNext** (full ESM)
 - All functions must have return type annotations
 - Use `interface` for object shapes, `type` for unions/intersections
 - Avoid `any` - use `unknown` when type is truly unknown
 - Use `readonly` for immutable data
+- Use `.js` extensions for relative imports (ESM requirement)
 
 ### Code Style
 
@@ -311,8 +314,8 @@ To test your changes in a real workflow:
 - Run `npm ci` to reinstall dependencies
 
 **Tests fail locally but pass in CI**:
-- Check Node.js version (must be 20.x)
-- Clear Jest cache: `npm test -- --clearCache`
+- Check Node.js version (must be 24.x)
+- Clear Vitest cache: `npm test -- --clearCache`
 
 **Linting errors**:
 - Run `npm run lint -- --fix` to auto-fix
