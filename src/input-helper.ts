@@ -2,7 +2,7 @@
  * Input helper for parsing and validating action inputs
  */
 
-import * as core from '@actions/core';
+import { getInput } from '@actions/core';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { ICacheSettings } from './cache-settings.js';
@@ -12,11 +12,11 @@ import { ValidationError } from './errors.js';
  * Get and validate all inputs from the action
  */
 export async function getInputs(): Promise<ICacheSettings> {
-  const cacheSiteForManifest = core.getInput('cache-site-for-manifest').trim();
+  const cacheSiteForManifest = getInput('cache-site-for-manifest').trim();
 
-  const extraInput = core.getInput('extra-input').trim();
+  const extraInput = getInput('extra-input').trim();
 
-  const cacheSitePath = core.getInput('cache-site-path').trim() || '_site';
+  const cacheSitePath = getInput('cache-site-path').trim() || '_site';
 
   // Validate cache-site-for-manifest if provided
   if (cacheSiteForManifest) {

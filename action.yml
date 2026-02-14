@@ -18,5 +18,5 @@ outputs:
     description: "True if valid cache exists"
 
 runs:
-  using: 'node20'
-  main: 'dist/index.js'
+  using: 'node24'
+  main: 'dist/index.cjs'

@@ -7,17 +7,19 @@ import { generateHashPatterns, generateHash } from '../src/file-hash-generator';
 import { ValidationError } from '../src/errors';
 import type { IMetanormaManifest } from '../src/manifest-parser';
 
-// Mock fs module
-vi.mock('fs', async () => {
-  const actualFs = await vi.importActual('fs');
-  return {
-    ...actualFs,
-    readFileSync: vi.fn(),
-    existsSync: vi.fn(),
-    mkdirSync: vi.fn(),
-    writeFileSync: vi.fn(),
-  };
-});
+// Mock @actions/core
+vi.mock('@actions/core', () => ({
+  info: vi.fn(),
+  warning: vi.fn(),
+}));
+
+// Mock fs module - must be before any import of fs
+vi.mock('fs', () => ({
+  readFileSync: vi.fn(),
+  existsSync: vi.fn(),
+  mkdirSync: vi.fn(),
+  writeFileSync: vi.fn(),
+}));
 
 // Mock glob module
 vi.mock('glob', () => ({

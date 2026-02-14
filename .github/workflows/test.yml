@@ -13,25 +13,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build and Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24.x
-
-      - run: npm ci
-
-      - run: npm run format-check
-
-      - run: npm run lint
-
-      - run: npm test
-
-      - run: npm run build
+  lint-test:
+    name: Build and Unit Tests
+    uses: actions-mn/shared/.github/workflows/lint-test.yml@main
+    with:
+      node-version: '24.x'
+      run-lint: true
 
   lint:
     name: Lint Action YAML
@@ -46,7 +33,7 @@ jobs:
   test:
     name: Test cache action on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: build
+    needs: lint-test
     strategy:
       fail-fast: false
       matrix:

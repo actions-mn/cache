@@ -2,8 +2,15 @@
  * Site cache manager for metanorma site output
  */
 
-import * as cache from '@actions/cache';
-import * as core from '@actions/core';
+import { restoreCache } from '@actions/cache';
+import {
+  info,
+  warning,
+  error,
+  setOutput,
+  startGroup,
+  endGroup,
+} from '@actions/core';
 import { CacheConstants, Outputs } from './constants.js';
 import type { ICacheSettings } from './cache-settings.js';
 import {
@@ -22,7 +29,7 @@ import { generateHashPatterns, generateHash } from './file-hash-generator.js';
 export async function cacheSiteOutput(
   settings: ICacheSettings
 ): Promise<boolean> {
-  core.startGroup('Cache site output');
+  startGroup('Cache site output');
 
   const { cacheSiteForManifest, extraInput, cacheSitePath } = settings;
 
@@ -32,9 +39,9 @@ export async function cacheSiteOutput(
     const sourceFiles = getSourceFiles(manifest);
     const manifestDir = getManifestDir(cacheSiteForManifest);
 
-    core.info(`Manifest path: ${cacheSiteForManifest}`);
-    core.info(`Source files: ${sourceFiles.join(', ')}`);
-    core.info(`Manifest directory: ${manifestDir}`);
+    info(`Manifest path: ${cacheSiteForManifest}`);
+    info(`Source files: ${sourceFiles.join(', ')}`);
+    info(`Manifest directory: ${manifestDir}`);
 
     // Generate hash patterns
     const hashPatterns = generateHashPatterns(
@@ -47,20 +54,20 @@ export async function cacheSiteOutput(
     const inputHash = await generateHash(hashPatterns);
 
     if (!inputHash) {
-      core.warning('No hash generated, skipping site cache');
-      core.endGroup();
+      warning('No hash generated, skipping site cache');
+      endGroup();
       return false;
     }
 
     // Set hash output
-    core.setOutput(Outputs.HASH, inputHash);
+    setOutput(Outputs.HASH, inputHash);
 
     // Generate cache key
     const cacheKey = `${CacheConstants.SITE_CACHE_KEY_PREFIX}${inputHash}`;
 
     // Restore cache
     const restoreKeys = [CacheConstants.SITE_CACHE_KEY_PREFIX];
-    const restoredKey = await cache.restoreCache(
+    const restoredKey = await restoreCache(
       [cacheSitePath],
       cacheKey,
       restoreKeys
@@ -68,20 +75,20 @@ export async function cacheSiteOutput(
 
     let cacheHit = false;
     if (restoredKey) {
-      core.info(`Site cache restored from key: ${restoredKey}`);
+      info(`Site cache restored from key: ${restoredKey}`);
       cacheHit = restoredKey === cacheKey;
     } else {
-      core.info('Site cache not found');
+      info('Site cache not found');
     }
 
     // Set cache hit output
-    core.setOutput(Outputs.CACHE_SITE_CACHE_HIT, String(cacheHit));
+    setOutput(Outputs.CACHE_SITE_CACHE_HIT, String(cacheHit));
 
-    core.endGroup();
+    endGroup();
     return cacheHit;
-  } catch (error) {
-    core.error(`Site cache failed: ${(error as any)?.message ?? error}`);
-    core.endGroup();
-    throw error;
+  } catch (err) {
+    error(`Site cache failed: ${(err as any)?.message ?? err}`);
+    endGroup();
+    throw err;
   }
 }

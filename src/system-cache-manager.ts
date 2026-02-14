@@ -2,8 +2,8 @@
  * System cache manager for metanorma-related assets
  */
 
-import * as cache from '@actions/cache';
-import * as core from '@actions/core';
+import { restoreCache } from '@actions/cache';
+import { debug, info, warning, startGroup, endGroup } from '@actions/core';
 import * as fs from 'fs';
 import { SYSTEM_CACHE_GROUPS } from './constants.js';
 
@@ -40,7 +40,7 @@ function filterExistingPaths(paths: readonly string[]): string[] {
     if (fs.existsSync(expandedPath)) {
       existingPaths.push(expandedPath);
     } else {
-      core.debug(`Path does not exist, skipping: ${cachePath}`);
+      debug(`Path does not exist, skipping: ${cachePath}`);
     }
   }
 
@@ -59,37 +59,35 @@ async function restoreCacheGroup(
   cacheKey: string,
   paths: readonly string[]
 ): Promise<void> {
-  core.startGroup(`Restore ${groupName} cache`);
+  startGroup(`Restore ${groupName} cache`);
 
   try {
     const existingPaths = filterExistingPaths(paths);
 
     if (existingPaths.length === 0) {
-      core.info(`No existing ${groupName} directories found to restore into`);
-      core.endGroup();
+      info(`No existing ${groupName} directories found to restore into`);
+      endGroup();
       return;
     }
 
-    core.debug(
+    debug(
       `Attempting to restore ${groupName} cache to paths: ${existingPaths.join(', ')}`
     );
 
-    const restoredKey = await cache.restoreCache(existingPaths, cacheKey, [
-      cacheKey,
-    ]);
+    const restoredKey = await restoreCache(existingPaths, cacheKey, [cacheKey]);
 
     if (restoredKey) {
-      core.info(`${groupName} cache restored from key: ${restoredKey}`);
+      info(`${groupName} cache restored from key: ${restoredKey}`);
     } else {
-      core.info(`${groupName} cache not found (first run or cache expired)`);
+      info(`${groupName} cache not found (first run or cache expired)`);
     }
   } catch (error) {
-    core.warning(
+    warning(
       `${groupName} cache restore failed: ${(error as any)?.message ?? error}`
     );
   }
 
-  core.endGroup();
+  endGroup();
 }
 
 /**
@@ -107,7 +105,7 @@ async function restoreCacheGroup(
  * @returns Cache result
  */
 export async function cacheSystemAssets(): Promise<void> {
-  core.startGroup('Cache system assets');
+  startGroup('Cache system assets');
 
   // Restore each cache group independently
   // This mirrors the v1 behavior where each cache was a separate @actions/cache call
@@ -135,6 +133,6 @@ export async function cacheSystemAssets(): Promise<void> {
     SYSTEM_CACHE_GROUPS.workgroup.paths
   );
 
-  core.info('System cache restore operations completed');
-  core.endGroup();
+  info('System cache restore operations completed');
+  endGroup();
 }

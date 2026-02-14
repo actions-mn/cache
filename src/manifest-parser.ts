@@ -4,7 +4,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import * as YAML from 'yaml';
+import { parse } from 'yaml';
 
 /**
  * Metanorma manifest structure
@@ -25,7 +25,7 @@ export interface IMetanormaManifest {
  */
 export function parseManifest(manifestPath: string): IMetanormaManifest {
   const manifestContent = fs.readFileSync(manifestPath, 'utf8');
-  return YAML.parse(manifestContent) as IMetanormaManifest;
+  return parse(manifestContent) as IMetanormaManifest;
 }
 
 /**
