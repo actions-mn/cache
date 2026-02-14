@@ -5,8 +5,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { cacheSystemAssets } from '../src/system-cache-manager';
 import { SYSTEM_CACHE_GROUPS } from '../src/constants';
-import * as cache from '@actions/cache';
-import * as core from '@actions/core';
+import { restoreCache, saveCache } from '@actions/cache';
+import { info, warning } from '@actions/core';
 import * as fs from 'fs';
 
 // Mock @actions/cache
@@ -15,17 +15,25 @@ vi.mock('@actions/cache', () => ({
   saveCache: vi.fn(),
 }));
 
-// Mock fs module
-vi.mock('fs', async () => {
-  const actualFs = await vi.importActual('fs');
-  return {
-    ...actualFs,
-    existsSync: vi.fn(),
-  };
-});
+// Mock @actions/core
+vi.mock('@actions/core', () => ({
+  debug: vi.fn(),
+  info: vi.fn(),
+  warning: vi.fn(),
+  startGroup: vi.fn(),
+  endGroup: vi.fn(),
+}));
 
-const mockRestoreCache = vi.mocked(cache).restoreCache;
-const mockExistsSync = vi.mocked(fs).existsSync;
+// Mock fs module
+vi.mock('fs', () => ({
+  existsSync: vi.fn(),
+}));
+
+const mockRestoreCache = vi.mocked(restoreCache);
+const mockSaveCache = vi.mocked(saveCache);
+const mockInfo = vi.mocked(info);
+const mockWarning = vi.mocked(warning);
+const mockExistsSync = vi.mocked(fs.existsSync);
 
 describe('system-cache-manager', () => {
   beforeEach(() => {
@@ -109,15 +117,13 @@ describe('system-cache-manager', () => {
       // Mock all paths as non-existent
       mockExistsSync.mockReturnValue(false);
 
-      const infoSpy = vi.spyOn(core, 'info');
-
       await cacheSystemAssets();
 
       // restoreCache should NOT be called when no paths exist
       expect(mockRestoreCache).not.toHaveBeenCalled();
 
       // Verify info messages about no existing directories
-      expect(infoSpy).toHaveBeenCalledWith(
+      expect(mockInfo).toHaveBeenCalledWith(
         expect.stringContaining('No existing metanorma directories found')
       );
     });
@@ -126,12 +132,10 @@ describe('system-cache-manager', () => {
       mockExistsSync.mockReturnValue(true);
       mockRestoreCache.mockResolvedValue(undefined);
 
-      const infoSpy = vi.spyOn(core, 'info');
-
       await cacheSystemAssets();
 
       // Should not throw, should handle gracefully
-      expect(infoSpy).toHaveBeenCalledWith(
+      expect(mockInfo).toHaveBeenCalledWith(
         expect.stringContaining('cache not found')
       );
     });
@@ -142,13 +146,11 @@ describe('system-cache-manager', () => {
         new Error('Cache service responded with 500')
       );
 
-      const warningSpy = vi.spyOn(core, 'warning');
-
       // Should not throw
       await expect(cacheSystemAssets()).resolves.not.toThrow();
 
       // Should log warnings
-      expect(warningSpy).toHaveBeenCalledWith(
+      expect(mockWarning).toHaveBeenCalledWith(
         expect.stringContaining('cache restore failed')
       );
     });
@@ -189,7 +191,7 @@ describe('system-cache-manager', () => {
       await cacheSystemAssets();
 
       // Verify saveCache is never called
-      expect(cache.saveCache).not.toHaveBeenCalled();
+      expect(mockSaveCache).not.toHaveBeenCalled();
     });
   });
 

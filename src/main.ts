@@ -2,7 +2,7 @@
  * Main entry point for the metanorma-cache action
  */
 
-import * as core from '@actions/core';
+import { info, setFailed } from '@actions/core';
 import * as inputHelper from './input-helper.js';
 import * as systemCacheManager from './system-cache-manager.js';
 import * as siteCacheManager from './site-cache-manager.js';
@@ -22,13 +22,13 @@ async function run(): Promise<void> {
     if (settings.cacheSiteForManifest) {
       await siteCacheManager.cacheSiteOutput(settings);
     } else {
-      core.info('No manifest specified, skipping site cache');
+      info('No manifest specified, skipping site cache');
     }
   } catch (error) {
     if (error instanceof ValidationError) {
-      core.setFailed(`Input validation failed: ${error.message}`);
+      setFailed(`Input validation failed: ${error.message}`);
     } else {
-      core.setFailed(`${(error as Error)?.message ?? error}`);
+      setFailed(`${(error as Error)?.message ?? error}`);
     }
   }
 }

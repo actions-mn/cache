@@ -2,7 +2,7 @@
  * File hash generator for cache key creation
  */
 
-import * as core from '@actions/core';
+import { info, warning } from '@actions/core';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -68,12 +68,12 @@ export async function generateHash(
   patterns: Set<string>
 ): Promise<string | undefined> {
   if (patterns.size === 0) {
-    core.warning('No hash patterns generated');
+    warning('No hash patterns generated');
     return undefined;
   }
 
   const hashPatterns = [...patterns].join('\n');
-  core.info(`Input directories:\n${hashPatterns}`);
+  info(`Input directories:\n${hashPatterns}`);
 
   // Collect all files matching the patterns
   const files = new Set<string>();
@@ -87,18 +87,18 @@ export async function generateHash(
         files.add(file);
       }
     } catch (error) {
-      core.warning(
+      warning(
         `Failed to glob pattern ${pattern}: ${(error as any)?.message ?? error}`
       );
     }
   }
 
   if (files.size === 0) {
-    core.warning('No files found matching patterns');
+    warning('No files found matching patterns');
     return undefined;
   }
 
-  core.info(`Found ${files.size} files for hashing`);
+  info(`Found ${files.size} files for hashing`);
 
   // Compute hash of all files
   const hash = crypto.createHash('sha256');
@@ -109,14 +109,14 @@ export async function generateHash(
       const content = fs.readFileSync(file);
       hash.update(content);
     } catch (error) {
-      core.warning(
+      warning(
         `Failed to read file ${file}: ${(error as any)?.message ?? error}`
       );
     }
   }
 
   const inputHash = hash.digest('hex');
-  core.info(`Input hash: ${inputHash}`);
+  info(`Input hash: ${inputHash}`);
 
   return inputHash;
 }
